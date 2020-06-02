@@ -5,6 +5,7 @@
 # ------------------------------------------------------------------------------
 
 # clearconsole()
+dir = "/Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Summer_2020/CodingBootcamp/ProblemSets/PS1/"
 
 ## Question 1
 function factorial2(n)
@@ -82,6 +83,8 @@ sp2 = histogram(β̂[2,:],title="b", bins = 5);
 sp3 = histogram(β̂[3,:],title="c", bins = 5);
 sp4 = histogram(β̂[4,:],title="d", bins = 4);
 H₁ = plot(sp1,sp2,sp3,sp4,layout=(2,2),legend=false)
+savefig(dir*"Q4_Hist.pdf")
+
 
 ## Question 5
 # Functions
@@ -124,6 +127,7 @@ end
 α_12 = histogram(T₀[3,:],title="α = 1.2", bins = 5);
 H₂ = plot(α_08,α_1,α_12,layout=(1,3),legend=false)
 xlabel!("T₀")
+savefig(dir*"Q5_Hist.pdf")
 
 ## Question 6
 function newtons_method(func, fprime, x_in, tol, maxit)
