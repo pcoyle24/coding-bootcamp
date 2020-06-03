@@ -39,11 +39,6 @@ k_grid = range(k_lb,stop = k_ub,length = n_k);
 n_Z = 1;
 Z_grid = Zg;
 
-# PF Space Allocation
-pf_k = zeros(n_k,n_Z);
-pf_c = zeros(n_k,n_Z);
-pf_v = zeros(n_k,n_Z);
-
 ## Main Code
 converged = 0;
 it = 1;
@@ -51,9 +46,13 @@ tick()
 while converged == 0 && it < maxit
     global converged
     global it
-    global pf_v
-    global pf_c
-    global pf_k
+
+    if it == 1
+        # PF Space Allocation
+        global pf_k = zeros(n_k,n_Z);
+        global pf_c = zeros(n_k,n_Z);
+        global pf_v = zeros(n_k,n_Z);
+    end
 
     # To make updating work
     global pf_k_up = zeros(n_k,n_Z);
@@ -61,27 +60,23 @@ while converged == 0 && it < maxit
     global pf_v_up = zeros(n_k,n_Z);
 
     for (i_Z, Z) in enumerate(Z_grid)
-        global Pr = P[i_Z,:];
         for (i_k, k_today) in enumerate(k_grid)
 
             # Find optimal investment/consumption given capital level today
-            global v_today_temp = zeros(n_k);
+            global pf_v_temp = zeros(n_k);
             for (i_k′, k_tomorrow) in enumerate(k_grid)
                 y_today = Z*k_today^θ;
-                c_temp = y_today + (1-δ)*k_today - k_tomorrow;
-                if c_temp < 0
-                    c_temp_today = log(0);
+                c_today_temp = y_today + (1-δ)*k_today - k_tomorrow;
+                v_tomorrow = pf_v[i_k′,1];
+                if c_today_temp < 0
+                    pf_v_temp[i_k′] = log(0) + β*v_tomorrow;
                 else
-                    c_temp_today = log(c_temp)
+                    pf_v_temp[i_k′] = log(c_today_temp) + β*v_tomorrow;
                 end
-
-                v_tomorrow = Pr[1]*pf_v[i_k′,1]; #+ Pr[2]*pf_v[i_k′,2]
-                v_today_temp[i_k′] = c_temp_today + β*v_tomorrow;
             end
 
-            v_today = maximum(v_today_temp)
-            V_inx = (LinearIndices(v_today_temp))[findall(x->x == v_today, v_today_temp)];
-            k′ = k_grid[V_inx][1];
+            v_today, max_v_inx = findmax(pf_v_temp);
+            k′ = k_grid[max_v_inx];
             c_today = Z*k_today^θ + (1-δ)*k_today - k′;
 
             # Update PFs
@@ -90,14 +85,10 @@ while converged == 0 && it < maxit
             pf_v_up[i_k,i_Z] = v_today;
         end
     end
-    # if it == 2
-    #     println(pf_v_up)
-    #     stop
-    # end
 
-    diff_v = sum(broadcast(abs,pf_v_up - pf_v));
-    diff_k = sum(broadcast(abs,pf_k_up - pf_k));
-    diff_c = sum(broadcast(abs,pf_c_up - pf_c));
+    diff_v = sum(abs.(pf_v_up - pf_v));
+    diff_k = sum(abs.(pf_k_up - pf_k));
+    diff_c = sum(abs.(pf_c_up - pf_c));
 
     max_diff = diff_v + diff_k + diff_c;
 
@@ -136,4 +127,4 @@ pf3 = plot(k_grid,pf_c[:,1],legend = false,color=:black, title="Consumption", lw
 pf = plot(pf1,pf2,pf3,layout=(1,3),size = (600,400), fmt = :pdf) #Size can be adjusted so don't need to mess around with 'blank space'
 xlabel!("Initial Capital Stock")
 dir = "/Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Summer_2020/CodingBootcamp/ProblemSets/PS1/"
-savefig(dir*"testfig.pdf")
+# savefig(dir*"testfig.pdf")

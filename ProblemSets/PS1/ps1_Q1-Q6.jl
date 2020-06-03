@@ -17,8 +17,7 @@ function factorial2(n)
     end
     return nfac
 end
-fac_7 = factorial2(7);
-println(fac_7)
+fac_7 = factorial2(7)
 
 ## Question 2
 function p(x,coeff)
@@ -29,23 +28,21 @@ function p(x,coeff)
     return sum
 end
 
-Σ = p(5,[-3., 1., 4.]);
-println(Σ)
+Σ = p(5,[-3., 1., 4.])
 
 ## Question 3
 function π_mc(sim)
     x = rand(sim);
     y = rand(sim);
 
-    z² = x.^2 + y.^2;
-    count = length(z²[z² .<= 1.])
+    z2 = x.^2 + y.^2;
+    count = length(z2[z2 .<= 1.])
 
     π_apx = 4*(count/sim);
     return π_apx
 end
 
-π_apx = π_mc(10000000);
-println(π_apx)
+π_apx = π_mc(10000000)
 
 
 ## Question 4
@@ -62,26 +59,26 @@ N = 50;
 sim = 20;
 
 # Main Code
-β̂ = zeros(4,sim);
+β_ols = zeros(4,sim);
 for i in 1:20
     # Random Draws for X and X
     R = randn(N,3);
-    x₁ = R[:,1];
-    x₂ = R[:,2];
+    x_1 = R[:,1];
+    x_2 = R[:,2];
     w = R[:,3];
 
-    y = a*x₁ + b*(x₁.^2) + c*x₂ + ones(N,1)*d + σ*w;
+    y = a*x_1 + b*(x_1.^2) + c*x_2 + ones(N,1)*d + σ*w;
 
-    X = hcat(x₁, x₁.^2, x₂, ones(N,1));
-    Xᵀ = transpose(X);
-    β̂[:,i] = inv(Xᵀ*X)*(Xᵀ*y);
+    X = hcat(x_1, x_1.^2, x_2, ones(N,1));
+    X_tr = transpose(X);
+    β_ols[:,i] = inv(X_tr*X)*(X_tr*y);
 end
 
 # Plotting Histograms
-sp1 = histogram(β̂[1,:],title="a", bins = 5);
-sp2 = histogram(β̂[2,:],title="b", bins = 5);
-sp3 = histogram(β̂[3,:],title="c", bins = 5);
-sp4 = histogram(β̂[4,:],title="d", bins = 4);
+sp1 = histogram(β_ols[1,:],title="a", bins = 5);
+sp2 = histogram(β_ols[2,:],title="b", bins = 5);
+sp3 = histogram(β_ols[3,:],title="c", bins = 5);
+sp4 = histogram(β_ols[4,:],title="d", bins = 4);
 H₁ = plot(sp1,sp2,sp3,sp4,layout=(2,2),legend=false)
 savefig(dir*"Q4_Hist.pdf")
 
@@ -110,23 +107,23 @@ a = 0;
 σ = 0.2;
 T = 200;
 sim = 100;
-T₀ = zeros(length(α_grid),sim);
+T_0 = zeros(length(α_grid),sim);
 
 # Main Code
 for (i,α) in enumerate(α_grid)
     #println(i)
     #println(α)
     for s in 1:sim
-        T₀[i,s] = first_time_passage(α,a,T)
+        T_0[i,s] = first_time_passage(α,a,T)
     end
 end
 
 # Plotting Histograms
-α_08 = histogram(T₀[1,:],title="α = 0.8", bins = 5);
-α_1 = histogram(T₀[2,:],title="α = 1", bins = 5);
-α_12 = histogram(T₀[3,:],title="α = 1.2", bins = 5);
+α_08 = histogram(T_0[1,:],title="α = 0.8", bins = 5);
+α_1 = histogram(T_0[2,:],title="α = 1", bins = 5);
+α_12 = histogram(T_0[3,:],title="α = 1.2", bins = 5);
 H₂ = plot(α_08,α_1,α_12,layout=(1,3),legend=false)
-xlabel!("T₀")
+xlabel!("T_0")
 savefig(dir*"Q5_Hist.pdf")
 
 ## Question 6
@@ -156,12 +153,10 @@ maxit = 10000;
 x₀ = 2;
 
 # Main Code
-f₁(x) = (x-1)^3;
-fpr₁(x) = 3(x-1)^2;
-xroot₁ = newtons_method(f₁, fpr₁, x₀, tol, maxit);
-println(xroot₁)
+f_1(x) = (x-1)^3;
+fpr_1(x) = 3(x-1)^2;
+xroot_1 = newtons_method(f_1, fpr_1, x₀, tol, maxit)
 
-f₂(x) = x^3 - 4;
-fpr₂(x) = 3x^2;
-xroot₂ = newtons_method(f₂, fpr₂, x₀, tol, maxit);
-println(xroot₂)
+f_2(x) = x^3 - 4;
+fpr_2(x) = 3x^2;
+xroot_2 = newtons_method(f_2, fpr_2, x₀, tol, maxit)
