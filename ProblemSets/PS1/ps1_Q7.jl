@@ -16,7 +16,7 @@ dir = "/Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Su
 δ = 0.025;|
 θ = 0.36;
 
-tol = 1e-6;
+tol = 1e-10;
 maxit = 10000;
 
 # Shocks
@@ -109,7 +109,7 @@ while converged == 0 && it < maxit
     pf_k = pf_k_up;
     pf_c = pf_c_up;
 
-    if mod(it,20) == 0
+    if mod(it,50) == 0
         println(" ")
         println("*************************************************")
         println("AT ITERATION = ", it)

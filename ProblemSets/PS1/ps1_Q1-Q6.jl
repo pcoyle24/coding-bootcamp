@@ -150,13 +150,13 @@ end
 # Housekeeping
 tol = 1e-10;
 maxit = 10000;
-x₀ = 2;
+x_0 = 2;
 
 # Main Code
 f_1(x) = (x-1)^3;
 fpr_1(x) = 3(x-1)^2;
-xroot_1 = newtons_method(f_1, fpr_1, x₀, tol, maxit)
+xroot_1 = newtons_method(f_1, fpr_1, x_0, tol, maxit)
 
 f_2(x) = x^3 - 4;
 fpr_2(x) = 3x^2;
-xroot_2 = newtons_method(f_2, fpr_2, x₀, tol, maxit)
+xroot_2 = newtons_method(f_2, fpr_2, x_0, tol, maxit)

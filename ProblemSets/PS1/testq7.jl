@@ -47,6 +47,7 @@ while converged == 0 && it < maxit
     global converged
     global it
 
+    # Housekeeping matters for Dynamic Progamming Algorithm
     if it == 1
         # PF Space Allocation
         global pf_k = zeros(n_k,n_Z);
@@ -54,7 +55,6 @@ while converged == 0 && it < maxit
         global pf_v = zeros(n_k,n_Z);
     end
 
-    # To make updating work
     global pf_k_up = zeros(n_k,n_Z);
     global pf_c_up = zeros(n_k,n_Z);
     global pf_v_up = zeros(n_k,n_Z);
@@ -64,23 +64,23 @@ while converged == 0 && it < maxit
 
             # Find optimal investment/consumption given capital level today
             global pf_v_temp = zeros(n_k);
-            for (i_k′, k_tomorrow) in enumerate(k_grid)
+            for (i_kpr, k_tomorrow) in enumerate(k_grid)
                 y_today = Z*k_today^θ;
                 c_today_temp = y_today + (1-δ)*k_today - k_tomorrow;
-                v_tomorrow = pf_v[i_k′,1];
+                v_tomorrow = pf_v[i_kpr,1];
                 if c_today_temp < 0
-                    pf_v_temp[i_k′] = log(0) + β*v_tomorrow;
+                    pf_v_temp[i_kpr] = log(0) + β*v_tomorrow;
                 else
-                    pf_v_temp[i_k′] = log(c_today_temp) + β*v_tomorrow;
+                    pf_v_temp[i_kpr] = log(c_today_temp) + β*v_tomorrow;
                 end
             end
 
             v_today, max_v_inx = findmax(pf_v_temp);
-            k′ = k_grid[max_v_inx];
-            c_today = Z*k_today^θ + (1-δ)*k_today - k′;
+            kpr = k_grid[max_v_inx];
+            c_today = Z*k_today^θ + (1-δ)*k_today - kpr;
 
             # Update PFs
-            pf_k_up[i_k,i_Z] = k′;
+            pf_k_up[i_k,i_Z] = kpr;
             pf_c_up[i_k,i_Z] = c_today;
             pf_v_up[i_k,i_Z] = v_today;
         end
