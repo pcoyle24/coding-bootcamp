@@ -9,7 +9,7 @@
 ! a simple neoclassical growth model with a two state markov productivity shock.
 !
 ! Routine:
-! cd /Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Summer_2020/CodingBootcamp/ProblemSets/PS1/
+! cd /Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Summer_2020/CodingBootcamp/ProblemSets/PS1/fortrantest
 ! gfortran -fopenmp -o neogrowth neogrowth.f90
 ! ./neogrowth
 ! ************************************************************************
@@ -92,7 +92,7 @@ double precision 						:: 				pf_v(n_k, n_Z)
 
 integer 										::			  i_stat
 
-!!$OMP THREADPRIVATE(k_today, Z_today, k_tomorrow, c_today, v_today, v_tomorrow, y_today, c_today_temp)
+!$OMP THREADPRIVATE(i_Z, i_k i_kpr, k_today, Z_today, k_tomorrow, c_today, v_today, v_tomorrow, y_today, c_today_temp)
 end module params_grid
 
 
@@ -114,11 +114,12 @@ use omp_lib
 implicit none
 
 ! allocating space for policy function updates
+double precision 						:: 				x_in(2)
+double precision 						:: 				x_out(3)
+
 double precision 						:: 				pf_c_up(n_k, n_Z)
 double precision 						:: 				pf_k_up(n_k, n_Z)
 double precision 						:: 				pf_v_up(n_k, n_Z)
-
-double precision 						:: 				pf_v_temp(n_k)
 
 double precision 						:: 				diff_c
 double precision 						:: 				diff_k
@@ -159,10 +160,10 @@ end do
 converged = 0
 it = 1
 
-! Begin Dynamic Programming Algo
+! Time Path itation
 do while (converged == 0 .and. it < max_it)
 
-	!!$OMP PARALLEL DO
+	!$OMP PARALLEL DO PRIVATE( x_in, x_out )
 	do i_Z = 1,n_Z
 		Z_today = grid_Z(i_Z)
 		if (i_Z == 1) then
@@ -180,24 +181,20 @@ do while (converged == 0 .and. it < max_it)
 			! Solve for the optimal consumption / capital investment
 			! ******************************************************
 
-			do i_kpr = 1,n_k
-				k_tomorrow = grid_k(i_kpr)
+			x_in(1) = k_today
+			x_in(2) = Z_today
 
-				y_today = Z_today*k_today**(cTHETA)
-				c_today_temp = y_today + (1-cDEL)*k_today - k_tomorrow
-				v_tomorrow = Pr(1)*pf_v(i_kpr,1) + Pr(2)*pf_v(i_kpr,2)
+			call optimal_choice(x_in, x_out)
 
+			! if (it == 2 .and. i_Z == 2 .and. i_k == 50)then
+			! 	write(*,*) x_in
+			! 	write(*,*) x_out
+			! 	stop
+			! end if
 
-				c_today_temp = max(0d0,c_today_temp)
-
-				pf_v_temp(i_kpr) = log(c_today_temp) + cBET*v_tomorrow
-
-			end do
-
-			v_today = maxval(pf_v_temp)
-			max_v_inx = maxloc(pf_v_temp)
-			k_tomorrow = grid_k(max_v_inx(1))
-			c_today = y_today + (1-cDEL)*k_today - k_tomorrow
+			c_today = x_out(1)
+			k_tomorrow = x_out(2)
+			v_today = x_out(3)
 
 	   ! *******************************
 	   ! ****Update Policy Functions****
@@ -208,7 +205,11 @@ do while (converged == 0 .and. it < max_it)
 
 		end do
 	end do
-	!!$OMP END PARALLEL DO
+	!$OMP END PARALLEL DO
+	! if (it == 2) then
+	! 	write(*,*) pf_c_up
+	! 	stop
+	! end if
 
 
 	! Find the difference between the policy functions and updates
@@ -267,3 +268,54 @@ write(*,*) "************END OF PROGRAM************"
 write(*,*) "**************************************"
 write(*,*) ""
 end program neogrowth
+
+! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
+! subroutine : optimal_choice
+!
+! description : Find the optimal capital consumption choice that solves
+! the dynamic programming problem.
+! ----------------------------------------------------------------------
+
+subroutine optimal_choice(x_in,x_out)
+
+use params_grid
+
+implicit none
+
+double precision, intent(in)    :: x_in(2)
+double precision, intent(out)   :: x_out(3)
+double precision 								:: pf_v_temp(n_k)
+
+
+
+k_today = x_in(1)
+Z_today = x_in(2)
+
+
+do i_kpr = 1,n_k
+	k_tomorrow = grid_k(i_kpr)
+
+	y_today = Z_today*k_today**(cTHETA)
+	c_today_temp = y_today + (1-cDEL)*k_today - k_tomorrow
+	v_tomorrow = Pr(1)*pf_v(i_kpr,1) + Pr(2)*pf_v(i_kpr,2)
+
+
+	c_today_temp = max(0d0,c_today_temp)
+
+	pf_v_temp(i_kpr) = log(c_today_temp) + cBET*v_tomorrow
+
+end do
+
+v_today = maxval(pf_v_temp)
+max_v_inx = maxloc(pf_v_temp)
+k_tomorrow = grid_k(max_v_inx(1))
+c_today = y_today + (1-cDEL)*k_today - k_tomorrow
+
+x_out(1) = c_today
+x_out(2) = k_tomorrow
+x_out(3) = v_today
+
+return
+
+end subroutine
