@@ -9,8 +9,10 @@
 ! a simple neoclassical growth model with a two state markov productivity shock.
 !
 ! Routine:
-! cd /Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Summer_2020/CodingBootcamp/ProblemSets/PS1/
-! gfortran -fopenmp -o neogrowth neogrowth.f90
+! cd /Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Summer_2020/CodingBootcamp/ProblemSets/PS1/f90
+! gfortran -fopenmp -o neogrowth neogrowth.f90 (gfortran compiler)
+! ifort -o neogrowth neogrowth.f90 (ifort compiler)
+! $FC $F90FLAGS neogrowth neogrowth.f90 $LINK_FNL -heap-arrays (IMSL compiler -- don't have)
 ! ./neogrowth
 ! ************************************************************************
 
@@ -60,8 +62,8 @@ integer 										:: 				converged		= 0
 integer						 				  :: 				i_k, i_kpr
 integer, parameter 				  :: 				n_k 				= 100
 double precision 						:: 				grid_k(n_k)
-double precision, parameter :: 				min_k 			= 1d0
-double precision, parameter :: 				max_k 			= 75d0
+double precision, parameter :: 				min_k 			= 1d-4 !1d0
+double precision, parameter :: 				max_k 			= 1d0 !75d0
 double precision, parameter :: 				step_k 			= (max_k - min_k)/(dble(n_k) - 1d0)
 double precision					  :: 				k_today
 double precision					  :: 				k_tomorrow
@@ -92,7 +94,7 @@ double precision 						:: 				pf_v(n_k, n_Z)
 
 integer 										::			  i_stat
 
-!!$OMP THREADPRIVATE(k_today, Z_today, k_tomorrow, c_today, v_today, v_tomorrow, y_today, c_today_temp)
+!$OMP THREADPRIVATE(i_k, i_Z, i_kpr, k_today, Z_today, k_tomorrow, c_today, v_today, v_tomorrow, y_today, c_today_temp)
 end module params_grid
 
 
@@ -162,7 +164,7 @@ it = 1
 ! Begin Dynamic Programming Algo
 do while (converged == 0 .and. it < max_it)
 
-	!!$OMP PARALLEL DO
+	!$OMP DO
 	do i_Z = 1,n_Z
 		Z_today = grid_Z(i_Z)
 		if (i_Z == 1) then
@@ -208,7 +210,7 @@ do while (converged == 0 .and. it < max_it)
 
 		end do
 	end do
-	!!$OMP END PARALLEL DO
+	!$OMP END DO
 
 
 	! Find the difference between the policy functions and updates
@@ -218,7 +220,7 @@ do while (converged == 0 .and. it < max_it)
 
 	max_diff = diff_c + diff_k + diff_v
 
-	if (mod(it,500) == 0) then
+	if (mod(it,250) == 0) then
 		write(*,*) ""
 		write(*,*) "********************************************"
 		write(*,*) "At itation = ", it

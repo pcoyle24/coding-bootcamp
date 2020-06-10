@@ -4,7 +4,6 @@
 # ps1_Q7_optimize.jl
 # ------------------------------------------------------------------------------
 
-#clearconsole()
 using Parameters
 using Plots
 ## Housekeeping
@@ -14,7 +13,7 @@ dir = "/Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Su
 ## Structures
 @with_kw struct Params
     β::Float64 = 0.99
-    δ::Float64= 0.025
+    δ::Float64 = 0.025
     θ::Float64 = 0.36
 
     tol::Float64 = 1e-10
@@ -30,9 +29,11 @@ end
     Pgg::Float64 = 0.977
     Pbg::Float64 = 1 - Pgg
     Pbb::Float64 = 0.926
-    Pgb::Float64 = 1- Pbb
-    Tmat::Array{Float64,2} = [Pgg Pbg
-                            Pgb Pbb]
+    Pgb::Float64 = 1 - Pbb
+    Tmat::Array{Float64,2} = [
+        Pgg Pbg
+        Pgb Pbb
+    ]
 end
 
 @with_kw struct Grids
@@ -42,9 +43,9 @@ end
     k_lb::Float64 = 1
     k_ub::Float64 = 75
     n_k::Int64 = 100
-    k_grid::Array{Float64,1} = range(k_lb,stop = k_ub,length = n_k)
+    k_grid::Array{Float64,1} = range(k_lb, stop = k_ub, length = n_k)
 
-    n_Z ::Int64= 2
+    n_Z::Int64 = 2
     Z_grid::Array{Float64,1} = [Zg, Zb]
 end
 
@@ -63,9 +64,9 @@ function solve_model()
 
     @unpack n_k, n_Z = G
     # Initial Guess
-    pf_c = zeros(n_k,n_Z)
-    pf_k = zeros(n_k,n_Z)
-    pf_v = zeros(n_k,n_Z)
+    pf_c = zeros(n_k, n_Z)
+    pf_k = zeros(n_k, n_Z)
+    pf_v = zeros(n_k, n_Z)
     PFs = PolFuncs(pf_c, pf_k, pf_v)
 
     converged = 0
@@ -81,7 +82,7 @@ function solve_model()
 
         max_diff = diff_v + diff_k + diff_c
 
-        if mod(it,250) == 0 || max_diff < P.tol
+        if mod(it, 250) == 0 || max_diff < P.tol
             println(" ")
             println("*************************************************")
             println("AT ITERATION = ", it)
@@ -107,12 +108,12 @@ function Bellman(P::Params, S::Shocks, G::Grids, PFs::PolFuncs)
     @unpack pf_c, pf_k, pf_v = PFs
 
     # To make updating work
-    pf_k_up = zeros(n_k,n_Z)
-    pf_c_up = zeros(n_k,n_Z)
-    pf_v_up = zeros(n_k,n_Z)
+    pf_k_up = zeros(n_k, n_Z)
+    pf_c_up = zeros(n_k, n_Z)
+    pf_v_up = zeros(n_k, n_Z)
 
     for (i_Z, Z) in enumerate(Z_grid)
-        Pr = Tmat[i_Z,:]
+        Pr = Tmat[i_Z, :]
         for (i_k, k_today) in enumerate(k_grid)
             # Must be defined outside loop.
             v_today = log(0)
@@ -121,13 +122,13 @@ function Bellman(P::Params, S::Shocks, G::Grids, PFs::PolFuncs)
 
             # Find optimal investment/consumption given capital level today
             for (i_kpr, k_temp) in enumerate(k_grid)
-                y_today = Z*k_today^θ
-                c_temp = y_today + (1-δ)*k_today - k_temp
-                v_tomorrow = Pr[1]*pf_v[i_kpr,1] + Pr[2]*pf_v[i_kpr,2]
+                y_today = Z * k_today^θ
+                c_temp = y_today + (1 - δ) * k_today - k_temp
+                v_tomorrow = Pr[1] * pf_v[i_kpr, 1] + Pr[2] * pf_v[i_kpr, 2]
                 if c_temp < 0
-                    v_temp = log(0) + β*v_tomorrow
+                    v_temp = log(0) + β * v_tomorrow
                 else
-                    v_temp = log(c_temp) + β*v_tomorrow
+                    v_temp = log(c_temp) + β * v_tomorrow
                 end
 
                 if v_temp > v_today
@@ -138,9 +139,9 @@ function Bellman(P::Params, S::Shocks, G::Grids, PFs::PolFuncs)
             end
 
             # Update PFs
-            pf_k_up[i_k,i_Z] = k_tomorrow
-            pf_c_up[i_k,i_Z] = c_today
-            pf_v_up[i_k,i_Z] = v_today
+            pf_k_up[i_k, i_Z] = k_tomorrow
+            pf_c_up[i_k, i_Z] = c_today
+            pf_v_up[i_k, i_Z] = v_today
         end
     end
 
@@ -151,18 +152,18 @@ function plot_pfs(dir::String, G::Grids, PFs::PolFuncs)
     @unpack k_grid = G
     @unpack pf_c, pf_k, pf_v = PFs
 
-    pf1 = plot(k_grid,pf_v[:,1],legend = false,color=:black, label = "Good State",lw = 2)
-    pf_1 = plot!(pf1,k_grid,pf_v[:,2],title="Value Function",legend = true,color=:blue, label = "Bad State",lw = 2)
+    pf1 = plot(k_grid,pf_v[:,1],legend = false,color=:black, label = "Good State",lw = 2);
+    pf_1 = plot!(pf1,k_grid,pf_v[:,2],title="Value Function",legend = true,color=:blue, label = "Bad State",lw = 2);
 
-    pf2 = plot(k_grid,pf_k[:,1],legend = false,color=:black, lw = 2)
-    pf_2 = plot!(pf2,k_grid,pf_k[:,2],title="Capital Investment",legend = false,color=:blue, lw = 2)
+    pf2 = plot(k_grid,pf_k[:,1],legend = false,color=:black, lw = 2);
+    pf_2 = plot!(pf2,k_grid,pf_k[:,2],title="Capital Investment",legend = false,color=:blue, lw = 2);
 
-    pf3 = plot(k_grid,pf_c[:,1],legend = false,color=:black, lw = 2)
-    pf_3 = plot!(pf3,k_grid,pf_c[:,2],title="Consumption",legend = false,color=:blue, lw = 2)
+    pf3 = plot(k_grid,pf_c[:,1],legend = false,color=:black, lw = 2);
+    pf_3 = plot!(pf3,k_grid,pf_c[:,2],title="Consumption",legend = false,color=:blue, lw = 2);
 
     pf = plot(pf_1,pf_2,pf_3,layout=(1,3),size = (600,400)) #Size can be adjusted so don't need to mess around with 'blank space'
     xlabel!("Initial Capital Stock")
-    savefig(dir*"Q7_PFs.pdf")
+    # savefig(dir * "Q7_PFs.pdf")
 end
 
 ## Main Code
