@@ -4,7 +4,8 @@
 # ps2.jl
 # ------------------------------------------------------------------------------
 
-using Optim, Plots
+using Optim, Plots, Interpolations, Statistics
+dir = "/Users/philipcoyle/Documents/School/University_of_Wisconsin/SecondYear/Summer_2020/CodingBootcamp/ProblemSets/PS2/"
 
 ## Question 1
 function Himmelblau(in::Array{Float64,1})
@@ -33,7 +34,7 @@ function h(H, in::Array{Float64,1})
 end
 
 # Part A
-n_grid = 1001
+n_grid = 101
 x_grid = range(-4, 4, length = n_grid)
 y_grid = x_grid
 
@@ -46,28 +47,44 @@ for i in 1:n_grid
     end
 end
 
-# Plot
-surface(x_grid, y_grid, z_grid, camera = (50, 50))
-contourf(x_grid, y_grid, log.(z_grid))
-
 # Part B (There are 4 local minima)
-for x1 = [-2.0, 2.0]
-    for x2 = [-3.0, 3.0]
-        guess = [x1, x2]
-        opt_newton = optimize(Himmelblau, g, h,guess)
-        println(opt_newton.minimizer)
+n_grid = 101
+minimizer = zeros(n_grid, n_grid)
+for i in 1:n_grid
+    for j = 1:n_grid
+        guess = [x_grid[i], y_grid[j]]
+        opt_newton = optimize(Himmelblau, g, h, guess)
+        if opt_newton.minimizer[1] < 0
+            minimizer[i,j] = 3
+            if opt_newton.minimizer[2] < 0
+                minimizer[i,j] = 4
+            end
+        else
+            minimizer[i,j] = 2
+            if opt_newton.minimizer[2] > 0
+                minimizer[i,j] = 1
+            end
+        end
     end
 end
-
 
 # Part C
-for x1 = [-2.0, 2.0]
-    for x2 = [-3.0, 3.0]
-        guess = [x1, x2]
-        opt_nm = optimize(Ackley, guess, NelderMead())
-        println(opt_nm.minimizer)
+num_iter = zeros(n_grid, n_grid)
+for i in 1:n_grid
+    for j = 1:n_grid
+        guess = [x_grid[i], y_grid[j]]
+        opt_newton = optimize(Himmelblau, g, h, guess)
+        num_iter[i,j] = opt_newton.iterations
     end
 end
+
+# Plot
+p11 = surface(x_grid, y_grid, z_grid, camera = (50, 50), title="Himmelblau Function");
+p12 = contourf(x_grid, y_grid, log.(z_grid), title="Contour Plot");
+p21 = contourf(x_grid, y_grid, minimizer, title="Convergence Destination \n 1 ≡ [3, 2]; 2 ≡ [3.6, -1.8]; 3 ≡ [-2.8, 3.1]; 4 ≡ [-3.8, -3.3]");
+p22 = contourf(x_grid, y_grid, log.(num_iter), title="(Log) Numer of Iters to Converge");
+plot(p11, p12, p21, p22, layout=(2,2),size = (1200,900))
+savefig(dir * "Q1.pdf")
 
 ## Question 2
 function Ackley(in::Array{Float64,1})
@@ -79,7 +96,7 @@ function Ackley(in::Array{Float64,1})
 end
 
 # Part A
-n_grid = 1001
+n_grid = 101
 x_grid = range(-4, 4, length = n_grid)
 y_grid = x_grid
 
@@ -93,20 +110,34 @@ for i in 1:n_grid
 end
 
 # Plot
-surface(x_grid, y_grid, z_grid, camera = (50, 50))
-contourf(x_grid, y_grid, z_grid)
+p1 = surface(x_grid, y_grid, z_grid, camera = (50, 50), title="Ackley Function");
+p2 = contourf(x_grid, y_grid, z_grid, title="Contour Plot");
+plot(p1, p2, layout=(1,2),size = (600,250))
+savefig(dir * "Q2_a.pdf")
 
 # Part B (trying different guesses)
-for x1 = [-2.0, 2.0]
-    for x2 = [-3.0, 3.0]
-        guess = [x1, x2]
+minimizer = zeros(n_grid, n_grid,2)
+num_iter = zeros(n_grid, n_grid,2)
+for i = 1:n_grid
+    for j = 1:n_grid
+        guess = [x_grid[i], y_grid[j]]
         opt_nm = optimize(Ackley, guess, NelderMead())
+        minimizer[i,j,1] = opt_nm.minimum
+        num_iter[i,j,1] = opt_nm.iterations
+
         opt_lbfgs = optimize(Ackley, guess, LBFGS())
-        println(opt_nm.minimizer)
-        println(opt_lbfgs.minimizer)
-        println(" ")
+        minimizer[i,j,2] = opt_lbfgs.minimum
+        num_iter[i,j,2] = opt_lbfgs.iterations
     end
 end
+
+# Plot
+p11 = contourf(x_grid, y_grid, log.(minimizer[:,:,1]), title="Nelder Mead \n (Log) Convergence Destination ");
+p12 = contourf(x_grid, y_grid, log.(minimizer[:,:,2]), title="LBFGS \n (Log) Convergence Destination");
+p21 = contourf(x_grid, y_grid, log.(num_iter[:,:,1]), title="(Log) Numer of Iters to Converge");
+p22 = contourf(x_grid, y_grid, log.(num_iter[:,:,2]), title="(Log) Numer of Iters to Converge");
+plot(p11, p12, p21, p22, layout=(2,2),size = (1200,950))
+savefig(dir * "Q2_b.pdf")
 
 ## Question 3
 function Rastrigin(x::Array{Float64,1}; A = 10)
@@ -122,20 +153,20 @@ function Rastrigin(x::Array{Float64,1}; A = 10)
 end
 
 # Part A
-n_grid = 1001
+n_grid = 101
 x_grid = range(-5.12, 5.12, length = n_grid)
 
 # Preallocate space for functuon
 z_grid_1d = zeros(n_grid,1)
 for i in 1:n_grid
-
     z_grid_1d[i] = Rastrigin([x_grid[i]])
 end
 
-plot(x_grid,z_grid_1d)
+plot(x_grid, z_grid_1d, title = "Rastrigin Function")
+savefig(dir * "Q3_a.pdf")
 
 # Part B
-n_grid = 1001
+n_grid = 101
 x_grid = range(-5.12, 5.12, length = n_grid)
 
 # Preallocate space for functuon
@@ -147,18 +178,130 @@ for i in 1:n_grid
     end
 end
 
-surface(x_grid,x_grid,z_grid_2d, camera = (50, 50))
-contourf(x_grid,x_grid,log.(z_grid_2d .+ 1))
+p1 = surface(x_grid,x_grid,z_grid_2d, camera = (50, 50), title="Rastrigin Function");
+p2 = contourf(x_grid,x_grid,log.(z_grid_2d .+ 1), title="Contour Plot");
+plot(p1, p2, layout=(1,2),size = (600,250))
+savefig(dir * "Q3_b.pdf")
 
 # Part C (trying different guesses)
-for x1 = [-2.0, 2.0]
-    for x2 = [-3.0, 3.0]
-        guess = [x1, x2]
+minimizer = zeros(n_grid, n_grid,2)
+num_iter = zeros(n_grid, n_grid,2)
+for i = 1:n_grid
+    for j = 1:n_grid
+        guess = [x_grid[i], x_grid[j]]
         opt_nm = optimize(Rastrigin, guess, NelderMead())
-        opt_lbfgs = optimize(Rastrigin, guess, LBFGS())
-        println(opt_nm.minimizer)
-        println(opt_lbfgs.minimizer)
-        println(" ")
+        minimizer[i,j,1] = opt_nm.minimum
+        num_iter[i,j,1] = opt_nm.iterations
 
+        opt_lbfgs = optimize(Rastrigin, guess, LBFGS())
+        minimizer[i,j,2] = opt_lbfgs.minimum
+        num_iter[i,j,2] = opt_lbfgs.iterations
     end
 end
+
+# Plot
+p11 = contourf(x_grid, x_grid, log.(minimizer[:,:,1]), title="Nelder Mead \n (Log) Convergence Destination ");
+p12 = contourf(x_grid, x_grid, log.(minimizer[:,:,2]), title="LBFGS \n (Log) Convergence Destination");
+p21 = contourf(x_grid, x_grid, log.(num_iter[:,:,1]), title="(Log) Numer of Iters to Converge");
+p22 = contourf(x_grid, x_grid, log.(num_iter[:,:,2]), title="(Log) Numer of Iters to Converge");
+plot(p11, p12, p21, p22, layout=(2,2),size = (1200,950))
+savefig(dir * "Q3_c.pdf")
+
+## Question 4
+function lin_interp(f::Function, a::Float64, b:: Float64, n::Int64, val::Float64)
+    if val < a || val > b
+        msg = "x must be betwen a and b"
+        throw(msg)
+    end
+
+    if n < 1
+        msg = "n must be a postive integer"
+        throw(msg)
+    end
+
+    grid = range(a, b, length = n)
+    f_grid = f.(grid)
+    f_interp = interpolate(f_grid,BSpline(Linear()))
+
+    # Get Index
+    inx_upper = findfirst(x->x>val, grid)
+    inx_lower = inx_upper - 1
+    val_upper, val_lower = grid[inx_upper], grid[inx_lower]
+    inx = inx_lower + (val - val_lower) / (val_upper - val_lower)
+
+    out = f_interp(inx)
+    return out
+end
+
+func(x) = log(x)
+a = 1.
+b = 10.
+x = 1.25
+n = 5
+
+lin_interp(func, a, b, n, x)
+
+## Question 5
+function get_inx(val::Float64, grid::Array{Float64,1})
+    if val >= grid[length(grid)]
+        inx = length(grid)
+    elseif val <= grid[1]
+        inx = 1
+    else
+        inx_upper = findfirst(x->x>val, grid)
+        inx_lower = inx_upper - 1
+        val_upper, val_lower = grid[inx_upper], grid[inx_lower]
+        inx = inx_lower + (val - val_lower) / (val_upper - val_lower)
+    end
+end
+
+function approx_error(f::Function, grid::Array{Float64,1}, grid_fine::Array{Float64,1})
+    f_grid = f.(grid)
+    f_interp = interpolate(f_grid,BSpline(Linear()))
+    f_apx = zeros(length(grid_fine),1)
+
+    for (i, grid_i) = enumerate(grid_fine)
+        grid_inx = get_inx(grid_i, grid)
+        f_apx[i] = f_interp(grid_inx)
+    end
+
+    f_out = abs.(f_apx .- f.(grid_fine))
+    f_out_avg = mean(f_out)
+
+    return f_out, f_out_avg
+end
+
+
+
+function opt_grid(grid::Array{Float64,1})
+    grid[1] = 0
+    grid[end] =100
+
+    f(x) = log(x+1)
+    grid_fine = collect(0:0.1:100)
+
+    ~, out = approx_error(f, grid, grid_fine)
+
+    return out
+end
+
+
+x_grid = collect(range(0,100, length = 11))
+x_grid_fine = collect(0:0.1:100)
+f(x) = log(x+1)
+
+# Part A
+error, avg_error = approx_error(f, x_grid, x_grid_fine)
+plot(x_grid, f.(x_grid), label = "Interpolated Function", color=:blue,lw = 2)
+plot!(x_grid_fine, f.(x_grid_fine), label = "True Function",  color=:black,lw = 2)
+plot!(x_grid_fine, error, label = "Approximation Error",  color=:red,lw = 2)
+savefig(dir * "Q5_LinearGrid.pdf")
+
+
+# Part C
+opt = optimize(opt_grid, x_grid)
+error, avg_error = approx_error(f, opt.minimizer, x_grid_fine)
+plot(opt.minimizer, f.(opt.minimizer), label = "Interpolated Function", color=:blue,lw = 2)
+plot!(x_grid_fine, f.(x_grid_fine), label = "True Function",  color=:black,lw = 2)
+plot!(x_grid_fine, error, label = "Approximation Error",  color=:red,lw = 2)
+savefig(dir * "Q5_OptimizedGrid.pdf")
