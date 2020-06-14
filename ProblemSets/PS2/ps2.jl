@@ -34,7 +34,7 @@ function h(H, in::Array{Float64,1})
 end
 
 # Part A
-n_grid = 10
+n_grid = 101
 x_grid = range(-4, 4, length = n_grid)
 y_grid = x_grid
 
