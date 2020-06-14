@@ -120,9 +120,12 @@ function Bellman(P::Params, S::Shocks, G::Grids, PFs::PolFuncs)
             c_today = log(0)
             k_tomorrow = log(0)
 
+            # Moving this line outside the loop GREATLY increases the code speed (1.7 to 0.39 seconds)
+            # Julia struggles to repeatedly do array exponentiation.
+            y_today = Z * k_today^θ
+
             # Find optimal investment/consumption given capital level today
             for (i_kpr, k_temp) in enumerate(k_grid)
-                y_today = Z * k_today^θ
                 c_temp = y_today + (1 - δ) * k_today - k_temp
                 v_tomorrow = Pr[1] * pf_v[i_kpr, 1] + Pr[2] * pf_v[i_kpr, 2]
                 if c_temp < 0
