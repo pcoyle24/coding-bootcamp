@@ -47,9 +47,9 @@ for i in 1:n_grid
     end
 end
 
-# Part B (There are 4 local minima)
+# Part B (Trying different guesses: argmin after convergence)
 n_grid = 101
-minimizer = zeros(n_grid, n_grid)
+
 for i in 1:n_grid
     for j = 1:n_grid
         guess = [x_grid[i], y_grid[j]]
@@ -68,22 +68,30 @@ for i in 1:n_grid
     end
 end
 
-# Part C
-num_iter = zeros(n_grid, n_grid)
+# Part C (Trying different guesses: Number of iterations)
+num_iter_newton = zeros(n_grid, n_grid)
+num_iter_nm = zeros(n_grid, n_grid)
 for i in 1:n_grid
     for j = 1:n_grid
         guess = [x_grid[i], y_grid[j]]
+
         opt_newton = optimize(Himmelblau, g, h, guess)
-        num_iter[i,j] = opt_newton.iterations
+        opt_nm = optimize(Himmelblau, guess, NelderMead())
+
+        num_iter_newton[i,j] = opt_newton.iterations
+        num_iter_nm[i,j] = opt_nm.iterations
     end
 end
 
 # Plot
-p11 = surface(x_grid, y_grid, z_grid, camera = (50, 50), title="Himmelblau Function");
-p12 = contourf(x_grid, y_grid, log.(z_grid), title="Contour Plot");
-p21 = contourf(x_grid, y_grid, minimizer, title="Convergence Destination \n 1 ≡ [3, 2]; 2 ≡ [3.6, -1.8]; 3 ≡ [-2.8, 3.1]; 4 ≡ [-3.8, -3.3]");
-p22 = contourf(x_grid, y_grid, log.(num_iter), title="(Log) Numer of Iters to Converge");
-plot(p11, p12, p21, p22, layout=(2,2),size = (1200,900))
+p1 = surface(x_grid, y_grid, z_grid, camera = (50, 50), title="Himmelblau Function");
+p2 = contourf(x_grid, y_grid, log.(z_grid), title="Contour Plot");
+p3 = contourf(x_grid, y_grid, minimizer, title="Convergence Destination \n 1 ≡ [3, 2]; 2 ≡ [3.6, -1.8]; 3 ≡ [-2.8, 3.1]; 4 ≡ [-3.8, -3.3]");
+p4 = contourf(x_grid, y_grid, log.(num_iter_newton), title="(Log) Numer of Iters to Converge \n Newton's Method");
+p5 = contourf(x_grid, y_grid, log.(num_iter_nm ), title="(Log) Numer of Iters to Converge \n Nelder Mead");
+
+l = @layout [a{0.5w} b{0.5w}; c{0.33h}; d{0.5w} e{0.5w}]
+plot(p1, p2, p3, p4, p5, layout = l, size = (800,900))
 savefig(dir * "Q1.pdf")
 
 ## Question 2
