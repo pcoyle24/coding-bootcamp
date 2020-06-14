@@ -120,6 +120,9 @@ function Bellman(P::Params, S::Shocks, G::Grids, PFs::PolFuncs)
         Pr = Tmat[i_Z, :]
         for (i_k, k_today) in enumerate(k_grid)
 
+
+            # There is no optimization to be seen here (like in the previous julia file)
+            # because we are not doing an inner loop for finding capital investment.
             y_today = Z * k_today^θ
             budget = y_today + (1 - δ) * k_today
 
