@@ -303,7 +303,7 @@ error, avg_error = approx_error(f, x_grid, x_grid_fine)
 plot(x_grid, f.(x_grid), label = "Interpolated Function", color=:blue,lw = 2)
 plot!(x_grid_fine, f.(x_grid_fine), label = "True Function",  color=:black,lw = 2)
 plot!(x_grid_fine, error, label = "Approximation Error",  color=:red,lw = 2)
-# savefig(dir * "Q5_LinearGrid.pdf")
+savefig(dir * "Q5_LinearGrid.pdf")
 
 
 # Part C
@@ -312,4 +312,4 @@ error, avg_error = approx_error(f, opt.minimizer, x_grid_fine)
 plot(opt.minimizer, f.(opt.minimizer), label = "Interpolated Function", color=:blue,lw = 2)
 plot!(x_grid_fine, f.(x_grid_fine), label = "True Function",  color=:black,lw = 2)
 plot!(x_grid_fine, error, label = "Approximation Error",  color=:red,lw = 2)
-# savefig(dir * "Q5_OptimizedGrid.pdf")
+savefig(dir * "Q5_OptimizedGrid.pdf")
