@@ -170,5 +170,5 @@ function plot_pfs(dir::String, G::Grids, PFs::PolFuncs)
 end
 
 ## Main Code
-@time G, PFs = solve_model()
+@elapsed G, PFs = solve_model()
 plot_pfs(dir, G, PFs)

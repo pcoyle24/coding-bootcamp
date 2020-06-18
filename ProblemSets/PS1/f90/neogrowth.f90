@@ -62,8 +62,8 @@ integer 										:: 				converged		= 0
 integer						 				  :: 				i_k, i_kpr
 integer, parameter 				  :: 				n_k 				= 100
 double precision 						:: 				grid_k(n_k)
-double precision, parameter :: 				min_k 			= 1d-4 !1d0
-double precision, parameter :: 				max_k 			= 1d0 !75d0
+double precision, parameter :: 				min_k 			= 1d0 !1d0
+double precision, parameter :: 				max_k 			= 75d0 !75d0
 double precision, parameter :: 				step_k 			= (max_k - min_k)/(dble(n_k) - 1d0)
 double precision					  :: 				k_today
 double precision					  :: 				k_tomorrow
